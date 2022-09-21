@@ -6,8 +6,9 @@ const { client,
   createPost,
   updatePost,
   getAllPosts,
-  createTags,
-  addTagsToPost,
+  getAllTags,
+  // createTags,
+  // addTagsToPost,
   getPostsByTagName,
 } = require('./index');
 
@@ -59,7 +60,7 @@ const createTables = async() => {
       CREATE TABLE post_tags (
         "postId" INTEGER REFERENCES posts(id),
         "tagId" INTEGER REFERENCES tags(id), 
-        UNIQUE("postId", "tagId")
+        UNIQUE ("postId", "tagId")
       );  
     `);
   
@@ -94,21 +95,21 @@ const createInitialPosts = async() => {
       authorId: albert.id,
       title: "First Post",
       content: "This is my first post. I hope I enjoy writing blogs as much as I enjoy reading them.",
-      tags: ['#rad', '#sick']
+      tags: ["#happy", "#youcandoanything"]
     });
 
     await createPost({
       authorId: sandra.id,
-      title: "First Post?",
-      content: "This is my first post, not sure if it's working though.",
-      tags: ['#awesome']
+      title: "How does this work?",
+      content: "Seriously, does this even do anything?",
+      tags: ["#happy", "#worst-day-ever"]
     });
 
     await createPost({
       authorId: glamgal.id,
-      title: "First Post!",
-      content: "This is my first post. It's definitely working!",
-      tags: ['#rad', '#sick', '#dope']
+      title: "Lving The Glam Life",
+      content: "Do you even? I swear that half of you are posing.",
+      tags: ["#happy", "#youcandoanything", "#canmandoeverything"]
     });
 
     console.log('...finished creating posts...');
@@ -122,18 +123,18 @@ const createInitialTags = async() => {
   try {
     console.log('...starting to create tags...');
 
-    const [rad, sick, awesome, dope] = await createTags([
-      '#rad',
-      '#sick',
-      '#awesome',
-      '#dope'
+    const [happy, sad, inspo, catman] = await createTags([
+      '#happy',
+      '#worst-day-ever',
+      '#youcandoanything',
+      '#catmandoeverything'
     ]);
     
     const [postOne, postTwo, postThree] = await getAllPosts();
     
-    await addTagsToPost(postOne.id, [rad, sick]);
-    await addTagsToPost(postTwo.id, [awesome]);
-    await addTagsToPost(postThree.id, [rad, sick, dope]);
+    await addTagsToPost(postOne.id, [happy, inspo]);
+    await addTagsToPost(postTwo.id, [sad]);
+    await addTagsToPost(postThree.id, [happy, catman, inspo]);
   
     console.log('...finished creating tags...')
   } catch (err) {
@@ -150,6 +151,7 @@ const rebuildDB = async() => {
     await createTables();
     await createInitialUsers();
     await createInitialPosts();
+    await createInitialTags();
   } catch(err) {
     console.log('...error rebuilding DB...')
     throw err;
@@ -182,18 +184,22 @@ const testDB = async() => {
     });
     console.log('...result:', updatePostResult);
 
+    console.log('...calling updatePost on posts[1], only updating tags...');
+    const updatePostTagsResult = await updatePost(posts[1].id, {
+      tags: ["#youcandoanything", "#redfish", "#bluefish"]
+    });
+    console.log('...result:', updatePostTagsResult);
+
     console.log('...calling getUserById with 1');
     const albert = await getUserById(1);
     console.log('...result:', albert);
 
-    console.log('...calling updatePost on posts[1], only updating tags...');
-    const updatePostTagsResult = await updatePost(posts[1].id, {
-      tags: ["#lame", "#bummer", "#nope"]
-    });
-    console.log('Result:', updatePostTagsResult);
+    console.log("...calling getAllTags");
+    const allTags = await getAllTags();
+    console.log("...result:", allTags);
 
-    console.log('...calling getPostsByTagName with #sick...');
-    const postsWithHappy = await getPostsByTagName("#sick");
+    console.log('...calling getPostsByTagName with #happy...');
+    const postsWithHappy = await getPostsByTagName("#happy");
     console.log('...result:', postsWithHappy);
 
     console.log('...finished testing database...');
